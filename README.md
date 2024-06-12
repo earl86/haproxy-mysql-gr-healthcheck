@@ -1,6 +1,7 @@
 # haproxy-mysql-gr-healthcheck
 
 The healthcheck script for haproxy to monitor MySQL Group Replication members.
+haproxy version >=1.6
 
 Per our test the compiled binary will produce twice less CPU load created by haproxy on doing external checks
 rather than doing the same via bash script and mysql cli.
@@ -14,17 +15,38 @@ global
     max-spread-checks 1s
     spread-checks 5
     external-check
-    default-server inter 1s rise 1 fall 1 on-marked-down shutdown-sessions
+
+frontend mysql-gr-front_write
+    bind *:5000
+    mode tcp
+    default_backend healthcheck_primary
 
 backend healthcheck_primary
+    mode tcp
+    balance leastconn
     option external-check
-    external-check command /opt/haproxy-mysql/haproxy-mysql-gr-healthcheck -x healthcheck_primary -n mysql_ip -p mysql_port -u mysql_user -a mysql_password
-    server mysql1_srv mysql_ip:mysql_port check inter 1s fastinter 500ms rise 1 fall 2
+    external-check path "haproxy:haproxy"
+    external-check command /opt/haproxy-mysql/haproxy-mysql-gr-healthcheck
+    default-server inter 3s fall 3 rise 2 on-marked-down shutdown-sessions
+    server mysql1_srv 192.168.1.100:3306 check inter 5s fastinter 500ms rise 1 fall 2
+    server mysql2_srv 192.168.1.101:3306 check inter 5s fastinter 500ms rise 1 fall 2
+    server mysql3_srv 192.168.1.102:3306 check inter 5s fastinter 500ms rise 1 fall 2
+
+
+frontend mysql-gr-front_read
+    bind *:5001
+    mode tcp
+    default_backend healthcheck_secondary
 
 backend healthcheck_secondary
+    mode tcp
+    balance roundrobin
     option external-check
-    external-check command /opt/haproxy-mysql/haproxy-mysql-gr-healthcheck -x healthcheck_secondary -n mysql_ip -p mysql_port -u mysql_user -a mysql_password
-    server mysql1_srv mysql_ip:mysql_port check inter 5s fastinter 500ms rise 1 fall 2
+    external-check path "haproxy:haproxy"
+    external-check command /opt/haproxy-mysql/haproxy-mysql-gr-healthcheck
+    server mysql1_srv 192.168.1.100:3306 check inter 5s fastinter 500ms rise 1 fall 2
+    server mysql2_srv 192.168.1.101:3306 check inter 5s fastinter 500ms rise 1 fall 2
+    server mysql3_srv 192.168.1.102:3306 check inter 5s fastinter 500ms rise 1 fall 2
 ```
 
 Replace mysql_ip mysql_port mysql_user mysql_password in haproxy.cfg.
