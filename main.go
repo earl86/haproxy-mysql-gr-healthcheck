@@ -21,8 +21,9 @@ var (
 	Version = "DEV"
 
 	// We pass credentials in this env var as there is no better way of doing this from haproxy.
-	//mysqlCredentials   = os.Getenv("PATH")
-	//haproxyBackendName = os.Getenv("HAPROXY_PROXY_NAME")
+	mysqlCredentials   = os.Getenv("PATH")
+	mysqlAddress       = os.Getenv("HAPROXY_SERVER_ADDR") + ":" + os.Getenv("HAPROXY_SERVER_PORT")
+	haproxyBackendName = os.Getenv("HAPROXY_PROXY_NAME")
 )
 
 type eventRow struct {
@@ -41,16 +42,11 @@ func debugMsg(isDebug bool, msg string) {
 }
 
 func main() {
+
 	var versionFlag, debugFlag bool
-	var mysql_ip, mysql_username, mysql_password, haproxyBackendName string
-	var mysql_port int
+
 	flag.BoolVar(&versionFlag, "v", false, "show version")
 	flag.BoolVar(&debugFlag, "d", false, "enable debug output")
-	flag.StringVar(&mysql_ip, "n", "", "mysql host ip")
-	flag.IntVar(&mysql_port, "p", 3306, "mysql host port")
-	flag.StringVar(&mysql_username, "u", "", "mysql username")
-	flag.StringVar(&mysql_password, "a", "", "mysql password")
-	flag.StringVar(&haproxyBackendName, "x", "", "haproxyBackendName")
 
 	flag.Parse()
 	if versionFlag {
@@ -58,12 +54,12 @@ func main() {
 		os.Exit(0)
 	}
 
-	if !strings.HasSuffix(haproxyBackendName, "_primary") && !strings.HasSuffix(haproxyBackendName, "_secondary") {
+	if !strings.HasSuffix(haproxyBackendName, "primary") && !strings.HasSuffix(haproxyBackendName, "secondary") {
 		debugMsg(debugFlag, "Haproxy backend name does not end with either _primary or _secondary.")
 		os.Exit(1)
 	}
 
-	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/?%s", mysql_username, mysql_password, mysql_ip, mysql_port, mysqlParams))
+	db, err := sql.Open("mysql", fmt.Sprintf("%s@tcp(%s)/?%s", mysqlCredentials, mysqlAddress, mysqlParams))
 	if err != nil {
 		fmt.Println("Error connecting to MySQL", err)
 		os.Exit(1)
@@ -88,10 +84,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	if strings.HasSuffix(haproxyBackendName, "_primary") && row.ReadOnly == "NO" && row.MemberRole == "PRIMARY" && row.MemberState == "ONLINE" {
+	if strings.HasSuffix(haproxyBackendName, "primary") && row.ReadOnly == "NO" && row.MemberRole == "PRIMARY" && row.MemberState == "ONLINE" {
 		debugMsg(debugFlag, "HEALTHCHECK PRIMARY - OK")
 		return
-	} else if strings.HasSuffix(haproxyBackendName, "_secondary") && row.ReadOnly == "YES" && row.MemberRole == "SECONDARY" && row.MemberState == "ONLINE" {
+	} else if strings.HasSuffix(haproxyBackendName, "secondary") && row.ReadOnly == "YES" && row.MemberRole == "SECONDARY" && row.MemberState == "ONLINE" {
 		debugMsg(debugFlag, "HEALTHCHECK SECONDARY - OK")
 		return
 	}
