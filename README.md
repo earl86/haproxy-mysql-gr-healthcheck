@@ -18,16 +18,16 @@ global
 
 backend healthcheck_primary
     option external-check
-    external-check path "mysql_user:mysql_pass"
-    external-check command /opt/haproxy-mysql/haproxy-mysql-gr-healthcheck
-    server mysql1_srv 127.0.0.1:3306 check inter 1s fastinter 500ms rise 1 fall 2
+    external-check command /opt/haproxy-mysql/haproxy-mysql-gr-healthcheck -x healthcheck_primary -n mysql_ip -p mysql_port -u mysql_user -a mysql_password
+    server mysql1_srv mysql_ip:mysql_port check inter 1s fastinter 500ms rise 1 fall 2
 
 backend healthcheck_secondary
     option external-check
-    external-check path "mysql_user:mysql_pass"
-    external-check command /opt/haproxy-mysql/haproxy-mysql-gr-healthcheck
-    server mysql1_srv 127.0.0.1:3306 check inter 5s fastinter 500ms rise 1 fall 2
+    external-check command /opt/haproxy-mysql/haproxy-mysql-gr-healthcheck -x healthcheck_secondary -n mysql_ip -p mysql_port -u mysql_user -a mysql_password
+    server mysql1_srv mysql_ip:mysql_port check inter 5s fastinter 500ms rise 1 fall 2
 ```
+
+Replace mysql_ip mysql_port mysql_user mysql_password in haproxy.cfg.
 
 Backends running haproxy-mysql-gr-healthcheck should be given a name with the suffix of either
 _primary or _secondary corresponding to the actual role of a Group Replication member.
@@ -44,5 +44,4 @@ mysql> show grants for haproxy;
 2 rows in set (0.00 sec)
 ```
 
-Additional SQL schema of `sys.gr_member_routing_candidate_status` is the same as for ProxySQL.
-You can find it here https://gist.github.com/lefred/77ddbde301c72535381ae7af9f968322 (also see the last comment).
+Additional SQL schema of `sys.gr_member_routing_candidate_status` to exec gr_member_routing_candidate_status.sql on the MySQL GR primary node.
