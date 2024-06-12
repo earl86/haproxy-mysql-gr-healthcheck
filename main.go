@@ -53,7 +53,7 @@ func main() {
 		fmt.Println("Version", Version)
 		os.Exit(0)
 	}
-
+	//fmt.Println(haproxyBackendName)
 	if !strings.HasSuffix(haproxyBackendName, "primary") && !strings.HasSuffix(haproxyBackendName, "secondary") {
 		debugMsg(debugFlag, "Haproxy backend name does not end with either _primary or _secondary.")
 		os.Exit(1)
