@@ -68,6 +68,7 @@ func main() {
 	//| viable_candidate | read_only | transactions_behind | transactions_to_cert | member_role | member_state |
 	rows, err := db.Query(query)
 	if err != nil {
+		db.Close()
 		fmt.Println("Error selecting from MySQL table:", err)
 		os.Exit(1)
 	}

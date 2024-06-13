@@ -67,3 +67,12 @@ mysql> show grants for haproxy;
 ```
 
 Additional SQL schema of `sys.gr_member_routing_candidate_status` to exec gr_member_routing_candidate_status.sql on the MySQL GR primary node.
+
+
+Build:
+```
+export GO111MODULE=on
+go mod tidy
+go build
+copy haproxy-mysql-gr-healthcheck to /opt/haproxy-mysql/
+```
