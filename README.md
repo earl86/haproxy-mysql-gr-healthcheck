@@ -68,6 +68,9 @@ mysql> show grants for haproxy;
 | GRANT SELECT ON `sys`.`gr_member_routing_candidate_status` TO `haproxy`@`%` |
 +-----------------------------------------------------------------------------+
 2 rows in set (0.00 sec)
+
+Attention: If mysql_checkport is admin_port the haproxy user need SERVICE_CONNECTION_ADMIN privilege.
+
 ```
 
 Additional SQL schema of `sys.gr_member_routing_candidate_status` to exec gr_member_routing_candidate_status.sql on the MySQL GR primary node.
