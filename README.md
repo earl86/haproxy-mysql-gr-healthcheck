@@ -25,9 +25,11 @@ backend healthcheck_primary
     mode tcp
     balance leastconn
     option external-check
-    external-check path "haproxy:haproxy"
+    #Sample: external-check path "mysql_user:mysql_password:mysql_checkport"
+    external-check path "haproxy:haproxy:13306"
     external-check command /opt/haproxy-mysql/haproxy-mysql-gr-healthcheck
     default-server inter 3s fall 3 rise 2 on-marked-down shutdown-sessions
+    #Sample: server mysql1_srv mysql_ip:mysql_port check inter 5s fastinter 500ms rise 1 fall 2
     server mysql1_srv 192.168.1.100:3306 check inter 5s fastinter 500ms rise 1 fall 2
     server mysql2_srv 192.168.1.101:3306 check inter 5s fastinter 500ms rise 1 fall 2
     server mysql3_srv 192.168.1.102:3306 check inter 5s fastinter 500ms rise 1 fall 2
@@ -42,14 +44,16 @@ backend healthcheck_secondary
     mode tcp
     balance roundrobin
     option external-check
-    external-check path "haproxy:haproxy"
+    #Sample: external-check path "mysql_user:mysql_password:mysql_checkport"
+    external-check path "haproxy:haproxy:13306"
     external-check command /opt/haproxy-mysql/haproxy-mysql-gr-healthcheck
+    #Sample: server mysql1_srv mysql_ip:mysql_port check inter 5s fastinter 500ms rise 1 fall 2
     server mysql1_srv 192.168.1.100:3306 check inter 5s fastinter 500ms rise 1 fall 2
     server mysql2_srv 192.168.1.101:3306 check inter 5s fastinter 500ms rise 1 fall 2
     server mysql3_srv 192.168.1.102:3306 check inter 5s fastinter 500ms rise 1 fall 2
 ```
 
-Replace mysql_ip mysql_port mysql_user mysql_password in haproxy.cfg.
+Replace mysql_ip mysql_port mysql_user mysql_password mysql_checkport in haproxy.cfg.
 
 Backends running haproxy-mysql-gr-healthcheck should be given a name with the suffix of either
 _primary or _secondary corresponding to the actual role of a Group Replication member.

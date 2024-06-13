@@ -21,8 +21,9 @@ var (
 	Version = "DEV"
 
 	// We pass credentials in this env var as there is no better way of doing this from haproxy.
-	mysqlCredentials   = os.Getenv("PATH")
-	mysqlAddress       = os.Getenv("HAPROXY_SERVER_ADDR") + ":" + os.Getenv("HAPROXY_SERVER_PORT")
+	mysqlOptions       = os.Getenv("PATH")
+	mysqlIP            = os.Getenv("HAPROXY_SERVER_ADDR")
+	mysqlPort          = os.Getenv("HAPROXY_SERVER_PORT")
 	haproxyBackendName = os.Getenv("HAPROXY_PROXY_NAME")
 )
 
@@ -44,6 +45,7 @@ func debugMsg(isDebug bool, msg string) {
 func main() {
 
 	var versionFlag, debugFlag bool
+	var mysqlUsername, mysqlPassword, mysqlCheckPort string
 
 	flag.BoolVar(&versionFlag, "v", false, "show version")
 	flag.BoolVar(&debugFlag, "d", false, "enable debug output")
@@ -59,7 +61,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	db, err := sql.Open("mysql", fmt.Sprintf("%s@tcp(%s)/?%s", mysqlCredentials, mysqlAddress, mysqlParams))
+	s := strings.Split(mysqlOptions, ":")
+	mysqlUsername = s[0]
+	mysqlPassword = s[1]
+	if len(s) == 3 {
+		mysqlCheckPort = s[2]
+	} else {
+		mysqlCheckPort = mysqlPort
+	}
+
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/?%s", mysqlUsername, mysqlPassword, mysqlIP, mysqlCheckPort, mysqlParams))
 	if err != nil {
 		fmt.Println("Error connecting to MySQL", err)
 		os.Exit(1)
@@ -68,9 +79,10 @@ func main() {
 	//| viable_candidate | read_only | transactions_behind | transactions_to_cert | member_role | member_state |
 	rows, err := db.Query(query)
 	if err != nil {
-		db.Close()
 		fmt.Println("Error selecting from MySQL table:", err)
 		os.Exit(1)
+	} else {
+		db.Close()
 	}
 
 	var row eventRow
