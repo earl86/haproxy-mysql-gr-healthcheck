@@ -1,7 +1,11 @@
 # haproxy-mysql-gr-healthcheck
 
 The healthcheck script for haproxy to monitor MySQL Group Replication members.
-haproxy version >=1.6
+
+```
+Require Haproxy version >= 1.6, MySQL version >= 8.0.17
+This tested Haproxy 1.8, MySQL 8.0.25
+```
 
 Per our test the compiled binary will produce twice less CPU load created by haproxy on doing external checks
 rather than doing the same via bash script and mysql cli.
