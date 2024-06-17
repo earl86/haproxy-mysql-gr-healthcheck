@@ -16,10 +16,14 @@ Also you don't need to add mysql cli to haproxy docker container if you are usin
 haproxy.cfg:
 ```
 global
+    # nbproc Deprecated and removed in HAProxy version 2.5. Per nbproc can increase the 2000 connect sessions.
+    nbproc 16
+    # nbthread Recommended use in HAProxy version 2.8
+    #nbthread 16
     user haproxy
     group haproxy
     stats socket /var/run/haproxy.sock mode 666 level admin
-    maxconn 10000
+    maxconn 100000
     max-spread-checks 1s
     spread-checks 5
     external-check
@@ -27,6 +31,9 @@ global
 
 defaults
     mode tcp
+    timeout connect 30s
+    timeout client 3600s
+    timeout server 3600s
 
 
 frontend mysql-gr-front_write
@@ -76,6 +83,38 @@ Replace mysql_ip mysql_port mysql_user mysql_password mysql_checkport in haproxy
 
 Backends running haproxy-mysql-gr-healthcheck should be given a name with the suffix of either
 _primary or _secondary corresponding to the actual role of a Group Replication member.
+
+
+haproxy.service:
+```
+haproxy1.8 in centos7:
+rh-haproxy18-3.1-2.el7.x86_64
+rh-haproxy18-haproxy-1.8.24-3.el7.x86_64
+rh-haproxy18-runtime-3.1-2.el7.x86_64
+
+
+cat /usr/lib/systemd/system/rh-haproxy18-haproxy.service
+[Unit]
+Description=HAProxy Load Balancer
+After=network.target
+
+[Service]
+Environment="CONFIG=/etc/opt/rh/rh-haproxy18/haproxy/haproxy.cfg" "PIDFILE=/run/rh-haproxy18-haproxy.pid"
+EnvironmentFile=/etc/sysconfig/rh-haproxy18-haproxy
+ExecStartPre=/opt/rh/rh-haproxy18/root/usr/sbin/haproxy -f $CONFIG -c -q $OPTIONS
+ExecStart=/opt/rh/rh-haproxy18/root/usr/sbin/haproxy -Ws -f $CONFIG -p $PIDFILE $OPTIONS
+ExecReload=/opt/rh/rh-haproxy18/root/usr/sbin/haproxy -f $CONFIG -c -q $OPTIONS
+ExecReload=/bin/kill -USR2 $MAINPID
+KillMode=mixed
+Type=notify
+LimitNOFILE=1024000
+LimitSTACK=infinity
+LimitMEMLOCK=infinity
+LimitCORE=infinity
+
+[Install]
+WantedBy=multi-user.target
+```
 
 MySQL user grants:
 ```
@@ -149,4 +188,22 @@ export GO111MODULE=on
 go mod tidy
 go build
 copy haproxy-mysql-gr-healthcheck to /opt/haproxy-mysql/
+```
+
+
+Manage:
+```
+yum install socat
+
+echo "help" | socat stdio /var/run/haproxy.sock
+echo "show info" | socat stdio /var/run/haproxy.sock
+echo "show stat" | socat stdio /var/run/haproxy.sock
+
+
+#ready/drain/maint
+echo "set server healthcheck_secondary/mysql2_srv state maint" | socat stdio /var/run/haproxy.sock
+echo "set server healthcheck_secondary/mysql3_srv state maint" | socat stdio /var/run/haproxy.sock
+
+echo "set server healthcheck_secondary/mysql2_srv state ready" | socat stdio /var/run/haproxy.sock
+echo "set server healthcheck_secondary/mysql3_srv state ready" | socat stdio /var/run/haproxy.sock
 ```
