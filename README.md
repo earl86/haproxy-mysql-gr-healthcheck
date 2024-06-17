@@ -16,13 +16,25 @@ Also you don't need to add mysql cli to haproxy docker container if you are usin
 haproxy.cfg:
 ```
 global
+    user haproxy
+    group haproxy
+    stats socket /var/run/haproxy.sock mode 666 level admin
+    maxconn 10000
     max-spread-checks 1s
     spread-checks 5
     external-check
 
+
+defaults
+    mode tcp
+
+
 frontend mysql-gr-front_write
     bind *:5000
     mode tcp
+    option contstats
+    option dontlognull
+    option clitcpka
     default_backend healthcheck_primary
 
 backend healthcheck_primary
@@ -32,16 +44,19 @@ backend healthcheck_primary
     #Sample: external-check path "mysql_user:mysql_password:mysql_checkport"
     external-check path "haproxy:haproxy:13306"
     external-check command /opt/haproxy-mysql/haproxy-mysql-gr-healthcheck
-    default-server inter 3s fall 3 rise 2 on-marked-down shutdown-sessions
-    #Sample: server mysql1_srv mysql_ip:mysql_port check inter 5s fastinter 500ms rise 1 fall 2
-    server mysql1_srv 192.168.1.100:3306 check inter 5s fastinter 500ms rise 1 fall 2
-    server mysql2_srv 192.168.1.101:3306 check inter 5s fastinter 500ms rise 1 fall 2
-    server mysql3_srv 192.168.1.102:3306 check inter 5s fastinter 500ms rise 1 fall 2
+    default-server inter 5s rise 1 fall 3 on-marked-down shutdown-sessions
+    #Sample: server mysql1_srv mysql_ip:mysql_port check inter 5s fastinter 500ms rise 1 fall 3
+    server mysql1_srv 192.168.1.100:3306 check inter 5s fastinter 500ms rise 1 fall 3
+    server mysql2_srv 192.168.1.101:3306 check inter 5s fastinter 500ms rise 1 fall 3
+    server mysql3_srv 192.168.1.102:3306 check inter 5s fastinter 500ms rise 1 fall 3
 
 
 frontend mysql-gr-front_read
     bind *:5001
     mode tcp
+    option contstats
+    option dontlognull
+    option clitcpka
     default_backend healthcheck_secondary
 
 backend healthcheck_secondary
@@ -51,10 +66,10 @@ backend healthcheck_secondary
     #Sample: external-check path "mysql_user:mysql_password:mysql_checkport"
     external-check path "haproxy:haproxy:13306"
     external-check command /opt/haproxy-mysql/haproxy-mysql-gr-healthcheck
-    #Sample: server mysql1_srv mysql_ip:mysql_port check inter 5s fastinter 500ms rise 1 fall 2
-    server mysql1_srv 192.168.1.100:3306 check inter 5s fastinter 500ms rise 1 fall 2
-    server mysql2_srv 192.168.1.101:3306 check inter 5s fastinter 500ms rise 1 fall 2
-    server mysql3_srv 192.168.1.102:3306 check inter 5s fastinter 500ms rise 1 fall 2
+    #Sample: server mysql1_srv mysql_ip:mysql_port check inter 5s fastinter 500ms rise 1 fall 3
+    server mysql1_srv 192.168.1.100:3306 check inter 5s fastinter 500ms rise 1 fall 3
+    server mysql2_srv 192.168.1.101:3306 check inter 5s fastinter 500ms rise 1 fall 3
+    server mysql3_srv 192.168.1.102:3306 check inter 5s fastinter 500ms rise 1 fall 3
 ```
 
 Replace mysql_ip mysql_port mysql_user mysql_password mysql_checkport in haproxy.cfg.
