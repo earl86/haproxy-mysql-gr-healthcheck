@@ -11,6 +11,16 @@ Per our test the compiled binary will produce twice less CPU load created by hap
 rather than doing the same via bash script and mysql cli.
 Also you don't need to add mysql cli to haproxy docker container if you are using it.
 
+
+## Build:
+```
+export GO111MODULE=on
+go mod tidy
+go build
+copy haproxy-mysql-gr-healthcheck to /opt/haproxy-mysql/
+```
+
+
 ## Setup
 
 haproxy.cfg:
@@ -79,6 +89,7 @@ backend healthcheck_secondary
     server mysql3_srv 192.168.1.102:3306 check inter 5s fastinter 500ms rise 1 fall 3
 ```
 
+
 Replace mysql_ip mysql_port mysql_user mysql_password mysql_checkport in haproxy.cfg.
 
 Backends running haproxy-mysql-gr-healthcheck should be given a name with the suffix of either
@@ -116,6 +127,7 @@ LimitCORE=infinity
 WantedBy=multi-user.target
 ```
 
+
 MySQL user grants:
 ```
 mysql> show grants for haproxy;
@@ -130,6 +142,7 @@ mysql> show grants for haproxy;
 Attention: If mysql_checkport is admin_port the haproxy user need SERVICE_CONNECTION_ADMIN privilege.
 
 ```
+
 
 Additional SQL schema of `sys.gr_member_routing_candidate_status` to exec gr_member_routing_candidate_status.sql on the MySQL GR primary node.
 ```
@@ -179,15 +192,6 @@ mysql> SELECT * FROM sys.gr_member_routing_candidate_status;
 1 row in set (0.01 sec)
 
 mysql>
-```
-
-
-Build:
-```
-export GO111MODULE=on
-go mod tidy
-go build
-copy haproxy-mysql-gr-healthcheck to /opt/haproxy-mysql/
 ```
 
 
