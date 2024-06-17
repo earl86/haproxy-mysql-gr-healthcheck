@@ -93,6 +93,54 @@ Attention: If mysql_checkport is admin_port the haproxy user need SERVICE_CONNEC
 ```
 
 Additional SQL schema of `sys.gr_member_routing_candidate_status` to exec gr_member_routing_candidate_status.sql on the MySQL GR primary node.
+```
+mysql -h 127.0.0.1 -P 5000 -u dba -p
+Enter password:
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 79344761
+Server version: 8.0.25-17 GreatSQL, Release 17, Revision 4733775f703
+
+Copyright (c) 2000, 2023, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> SELECT * FROM sys.gr_member_routing_candidate_status;
++------------------+-----------+---------------------+----------------------+-------------+--------------+
+| viable_candidate | read_only | transactions_behind | transactions_to_cert | member_role | member_state |
++------------------+-----------+---------------------+----------------------+-------------+--------------+
+| YES              | NO        |                   0 |                    0 | PRIMARY     | ONLINE       |
++------------------+-----------+---------------------+----------------------+-------------+--------------+
+1 row in set (0.01 sec)
+
+
+mysql -h 127.0.0.1 -P 5001 -u dba -p
+Enter password:
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 174175
+Server version: 8.0.25-17 GreatSQL, Release 17, Revision 4733775f703
+
+Copyright (c) 2000, 2023, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> SELECT * FROM sys.gr_member_routing_candidate_status;
++------------------+-----------+---------------------+----------------------+-------------+--------------+
+| viable_candidate | read_only | transactions_behind | transactions_to_cert | member_role | member_state |
++------------------+-----------+---------------------+----------------------+-------------+--------------+
+| YES              | YES       |                   2 |                    0 | SECONDARY   | ONLINE       |
++------------------+-----------+---------------------+----------------------+-------------+--------------+
+1 row in set (0.01 sec)
+
+mysql>
+```
 
 
 Build:
