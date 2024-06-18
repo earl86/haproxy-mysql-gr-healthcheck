@@ -27,12 +27,46 @@ haproxy.cfg:
 ```
 global
     # nbproc Deprecated and removed in HAProxy version 2.5. Per nbproc can increase the 2000 connect sessions.
-    nbproc 16
-    # nbthread Recommended use in HAProxy version 2.8
+
+    # Single-process one-threading:
+    #nbproc 1
+    #cpu-map auto:1   0            # bind the process 1 to the cpu 0.
+
+    # Single-process multi-threading
+    #nbproc 1
     #nbthread 16
+    #cpu-map auto:1/1-16   0-15    # bind the thread 1 to the cpu 0, the thread 2 to cpu 1 and so on.
+
+    # Multi-process one-threading:
+    nbproc 16
+    cpu-map auto:1-16   0-15       # bind the process 1 to the cpu 0, the process 2 to cpu 1 and so on.
+    # Add every process can be stated
+    #stats socket /var/run/haproxy1.sock mode 666 level admin process 1
+    #...and so on
+    #stats socket /var/run/haproxy16.sock mode 666 level admin process 16
+
+    # Multi-process multi-threading:
+    #nbproc 16
+    #nbthread 16
+    #cpu-map auto:1-16   0-15      # bind the process 1 to the cpu 0, the process 2 to cpu 1 and so on.
+    # Add every process can be stated
+    #stats socket /var/run/haproxy1.sock mode 666 level admin process 1
+    #...and so on
+    #stats socket /var/run/haproxy16.sock mode 666 level admin process 16
+
+    #Multi-threading >= HAProxy 2.5
+    #nbthread 256
+    # The default value is 1. The maximum number of groups is configured at compile time and defaults to 16.
+    # It is also the only way to use more than 64 threads since up to 64 threads per group may be configured.
+    #thread-groups 16
+    #numa-cpu-mapping              # When cpu-map confinged, the uma-cpu-mapping not working.
+    #cpu-map auto:1/all   0-15     # Bind all threads of the num 1 group on the 0-15 CPUs
+    #...and so on
+    #cpu-map auto:16/all   240-255 # Bind all threads of the num 16 group on the 240-255 CPUs
+
+    stats socket /var/run/haproxy.sock mode 666 level admin
     user haproxy
     group haproxy
-    stats socket /var/run/haproxy.sock mode 666 level admin
     maxconn 100000
     max-spread-checks 1s
     spread-checks 5
@@ -197,6 +231,7 @@ mysql>
 
 Manage:
 ```
+use socat:
 yum install socat
 
 echo "help" | socat stdio /var/run/haproxy.sock
@@ -210,4 +245,5 @@ echo "set server healthcheck_secondary/mysql3_srv state maint" | socat stdio /va
 
 echo "set server healthcheck_secondary/mysql2_srv state ready" | socat stdio /var/run/haproxy.sock
 echo "set server healthcheck_secondary/mysql3_srv state ready" | socat stdio /var/run/haproxy.sock
+
 ```
