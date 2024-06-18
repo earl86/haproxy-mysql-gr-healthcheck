@@ -59,7 +59,7 @@ global
     # The default value is 1. The maximum number of groups is configured at compile time and defaults to 16.
     # It is also the only way to use more than 64 threads since up to 64 threads per group may be configured.
     #thread-groups 16
-    #numa-cpu-mapping              # When cpu-map confinged, the uma-cpu-mapping not working.
+    #numa-cpu-mapping              # When cpu-map configured, the numa-cpu-mapping not working.
     #cpu-map auto:1/all   0-15     # Bind all threads of the num 1 group on the 0-15 CPUs
     #...and so on
     #cpu-map auto:16/all   240-255 # Bind all threads of the num 16 group on the 240-255 CPUs
